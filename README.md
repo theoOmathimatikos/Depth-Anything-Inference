@@ -10,24 +10,18 @@ This is just a simple implementation of the inference for the project Depth-Anyt
   - https://huggingface.co/spaces/LiheYoung/Depth-Anything/blob/main/checkpoints/depth_anything_vitl14.pth
   The checkpoints folder should be inside the metric_depth folder.
 
-4. Run 
-
-`cd Depth-Anything/metric_depth`.
+4. Run `cd Depth-Anything/metric_depth`.
 
 5. Run 
-
 `conda env create -f environment.yml`
-
 then 
-
 `conda activate zoe`. 
 
-If there is any other dependency that has not been installed (and returns an error when running the script), download it with conda or pip.
+  If there is any other dependency that has not been installed (and returns an error when running the script), download it with conda or pip.
 
 6. Take all images you want to estimate and add them to the directory metric_depth/zoedepth/data/CUSTOM/images preferably with numbers as indices.
 
 7. Run the following command: 
 
 `python evaluate.py -m zoedepth --pretrained_resource="local::./checkpoints/depth_anything_metric_depth_outdoor.pt" -d custom_outdoor`
-
-You will find the results in metric_depth/zoedepth/data/CUSTOM/results.
+  You will find the results in metric_depth/zoedepth/data/CUSTOM/results.

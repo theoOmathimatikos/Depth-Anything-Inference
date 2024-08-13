@@ -19,9 +19,8 @@ then
 
   If there is any other dependency that has not been installed (and returns an error when running the script), download it with conda or pip.
 
-6. Take all images you want to estimate and add them to the directory metric_depth/zoedepth/data/CUSTOM/images preferably with numbers as indices.
+6. Take all images you want to estimate and add them to the directory Data/Images preferably with numbers as indices.
 
-7. Run the following command: 
-
-`python evaluate.py -m zoedepth --pretrained_resource="local::./checkpoints/depth_anything_metric_depth_outdoor.pt" -d custom_outdoor`
-  You will find the results in metric_depth/zoedepth/data/CUSTOM/results.
+7. Go to the root of the project and run the following command: 
+  `python3 estimate_parameters.py`
+  You will find the results in Data/Results.

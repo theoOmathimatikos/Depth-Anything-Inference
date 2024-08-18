@@ -10,15 +10,15 @@ This is just a simple implementation of the inference for the project Depth-Anyt
   - https://huggingface.co/spaces/LiheYoung/Depth-Anything/blob/main/checkpoints/depth_anything_vitl14.pth
   The checkpoints folder should be inside the metric_depth folder.
 
-5. Run 
+4. Run 
 `conda env create -f environment.yml`
 then 
 `conda activate depth_env`. 
 
   If there is any other dependency that has not been installed (and returns an error when running the script), download it with conda or pip.
 
-6. Take all images you want to estimate and add them to the directory `Data/Run` preferably with numbers as indices.
+5. Take all images you want to estimate and add them to the directory `Data/Run` preferably with numbers as indices.
 
-7. Go to the root of the project and run the following command: 
+6. Go to the root of the project and run the following command: 
   `python3 estimate_parameters.py`
   You will find the results in `parameters_results.txt`.

@@ -128,7 +128,7 @@ class DepthDataLoader(object):
             return
         
         if config.dataset == 'custom_outdoor':
-            self.data = get_custom_loader(os.getcwd()+"/Data/Images/", batch_size=1, 
+            self.data = get_custom_loader(os.getcwd()+"/Data/Run/", batch_size=1, 
                                           num_workers=1)
             return
 

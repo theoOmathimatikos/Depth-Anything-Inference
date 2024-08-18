@@ -4,18 +4,24 @@ import numpy as np
 import torch
 from PIL import Image
 from torch.utils.data import DataLoader, Dataset
+from torchvision import transforms
 
 
 class ToTensor(object):
 
     def __init__(self):
+        ### TODO. Check results from other transformations
+        # self.normalize = transforms.Normalize(
+        #     mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         self.normalize = lambda x : x
+        # self.resize = transforms.Resize((224, 224))
 
     def __call__(self, sample):
 
         image = sample['image']
         image = self.to_tensor(image)
         image = self.normalize(image)
+        # image = self.resize(image)
 
         return {'image': image, 'dataset': "custom_outdoor", 'route': sample['route'], 'path': sample['path']}
 
@@ -48,12 +54,13 @@ class CUSTOM_Outdoor(Dataset):
         ))
         self.Transform = ToTensor()
 
-        # print(self.image_files)
-
     def __getitem__(self, idx):
     
         image_path = self.image_files[idx]
         image = np.asarray(Image.open(image_path), dtype=np.float32) / 255.0
+
+        if image.shape[2] == 4:
+            image = image[:, :, :3]
 
         sample = dict(image=image, dataset="custom_outdoor", 
                       route=os.getcwd(), 

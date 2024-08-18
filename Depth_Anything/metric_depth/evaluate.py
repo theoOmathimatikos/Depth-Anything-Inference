@@ -134,28 +134,29 @@ def custom_infer(pretrained_resource, model_name, dataset, **kwargs):
 
     test_loader = DepthDataLoader(config, "test").data
 
+    collect_names = []
     for sample in tqdm(test_loader, total=len(test_loader)):
 
         image = sample['image'].cuda()
-        rt = sample['route']
-        pth = sample['path']
-        name = rt[0]+"/Data/Results/"+pth[0]
+        rt, pth = sample['route'], sample['path'][0]
+        name = rt[0]+"/Data/Depth_Estim/"+pth
+
+        pred = infer(model, image, dataset=sample['dataset'][0])
 
         try:
 
             pred = infer(model, image, dataset=sample['dataset'][0])
-             
-            p = colorize(pred.squeeze().cpu().numpy(), 0, 10)
-            
-            Image.fromarray(p).save(name.rsplit(".", 1)[0]+".png")
             torch.save(pred, name.rsplit(".", 1)[0]+".pt")
-            print(f"Sample {pth[0]} done!")
+            collect_names.append(pth)
+             
+            # p = colorize(pred.squeeze().cpu().numpy(), 0, 10)            
+            # Image.fromarray(p).save(name.rsplit(".", 1)[0]+".png")
 
         except RuntimeError:
 
             print("An error occured")
 
-    return
+    return collect_names
 
 
 def eval_model(model_name, pretrained_resource, dataset='nyu', **kwargs):

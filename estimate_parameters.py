@@ -60,6 +60,7 @@ def depth_derivatives(old_id, new_id, mask_np=np.array([]), real_dist=1, plot=Tr
     # kz = np.mean(bin_means)
 
     with open("parameters_results.txt", "a") as f:
+        f.write("\n")
         f.write(f"Image {old_id} \n")
         # f.write("Bin means:", bin_means)
         f.write(f"mean: {mean_act} \n")

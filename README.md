@@ -17,7 +17,7 @@ then
 
   If there is any other dependency that has not been installed (and returns an error when running the script), download it with conda or pip.
 
-5. Take all images you want to estimate and add them to the directory `Data/Run` preferably with numbers as indices.
+5. Take all images you want to estimate and add them to the directory `Data/Run` preferably with letters as indices ("a.png").
 
 6. Go to the root of the project and run the following command: 
   `python3 estimate_parameters.py`

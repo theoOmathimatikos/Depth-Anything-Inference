@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from PIL import Image
 
 
-def depth_derivatives(old_id, new_id, mask_np=np.array([]), real_dist=1, plot=True):
+def depth_derivatives(old_id, new_id, mask_np=np.array([]), real_dist=1, plot=False):
     """ A method for calculating the roughness of the beam of a ship.
     
     Args:
@@ -50,14 +50,18 @@ def depth_derivatives(old_id, new_id, mask_np=np.array([]), real_dist=1, plot=Tr
     SK = 1/(k_rms**3) * np.nanmean(np.power(points[:,2] - mean_act, 3))
     
     num_bins = int(len(points)**0.5)
-    # counts, bin_edges = np.histogram(np.abs(np.gradient(points[:,2])), bins=num_bins)
+    try:
 
-    # k = 5
-    # sorted_indices = np.argsort(counts)[::-1] 
-    # top_k_indices = sorted_indices[:k]  
+        counts, bin_edges = np.histogram(np.abs(np.gradient(points[:,2])), bins=num_bins)
 
-    # bin_means = [(bin_edges[i] + bin_edges[i+1]) / 2 for i in top_k_indices]
-    # kz = np.mean(bin_means)
+        k = 5
+        sorted_indices = np.argsort(counts)[::-1] 
+        top_k_indices = sorted_indices[:k]  
+
+        bin_means = [(bin_edges[i] + bin_edges[i+1]) / 2 for i in top_k_indices]
+        kz = np.mean(bin_means)
+
+    except KeyError: kz = 0
 
     with open("parameters_results.txt", "a") as f:
         f.write("\n")
@@ -65,11 +69,11 @@ def depth_derivatives(old_id, new_id, mask_np=np.array([]), real_dist=1, plot=Tr
         # f.write("Bin means:", bin_means)
         f.write(f"mean: {mean_act} \n")
         f.write(f"std: {np.nanstd(points)} \n")    
-        f.write(f"ES: {ES}, ka: {ka}, k_rms: {k_rms}, Sk: {SK} \n")  # , k_z: {kz}
+        f.write(f"ES: {ES}, ka: {ka}, k_rms: {k_rms}, Sk: {SK}, k_z: {kz} \n")
         f.write("\n")
 
-    # if plot:
-    #     plot_results(points)
+    if plot:
+        plot_results(points)
         
 
 def plot_results(points, path):

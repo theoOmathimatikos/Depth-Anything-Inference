@@ -66,11 +66,13 @@ if __name__ == "__main__":
     args, unknown_args = parser.parse_known_args()
     overwrite_kwargs = parse_unknown(unknown_args)
 
-    images = os.listdir(os.getcwd() + "/Data/Run/")
+    images = sorted(os.listdir(os.getcwd() + "/Data/Run/"))
     image_new_ids = [rename_img(img_name) for img_name in images]
 
     depth_img_names = custom_infer(args.pretrained_resource, args.model, 
                  args.dataset, **overwrite_kwargs)
+    
+    real_dists = [1, 0.3, 0.3]
 
     for i, img_name in enumerate(image_new_ids):
 
@@ -80,8 +82,8 @@ if __name__ == "__main__":
         if args.viz_depth:
             vis_one_img(new_id)
 
-        _, mask = bkgrd_removal_pipeline(new_img_path)
+        # _, mask = bkgrd_removal_pipeline(new_img_path)
 
-        depth_derivatives(img_name, image_new_ids[i], mask, plot=False)
+        depth_derivatives(img_name, image_new_ids[i], real_dist=real_dists[i], plot=False)
 
         os.remove(os.getcwd() + "/Data/Run/" + img_name)

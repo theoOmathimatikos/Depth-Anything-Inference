@@ -43,10 +43,11 @@ def depth_derivatives(old_id, new_id, mask_np=np.array([]), real_dist=1, plot=Fa
 
     # mean_grad_z = np.mean(np.gradient(points[:,2]))  # Not in use?
     mean_act = np.nanmean(points[:,2])
-    ES = np.nanmean(np.abs(np.gradient(points[:,2])))
-    ka = np.nanmean(points[:,2] - mean_act)
+    ES = np.nanmean(np.abs(np.gradient(points[:, 2])))
+    ka = np.nanmean(points[:, 2] - mean_act)
+    ka_abs = np.nanmean(np.abs(points[:, 2] - mean_act))
     
-    k_rms = (np.nanmean(np.power(points[:,2] - mean_act,2)))**0.5
+    k_rms = (np.nanmean(np.power(points[:, 2] - mean_act,2)))**0.5
     SK = 1/(k_rms**3) * np.nanmean(np.power(points[:,2] - mean_act, 3))
     
     num_bins = int(len(points)**0.5)
@@ -64,12 +65,10 @@ def depth_derivatives(old_id, new_id, mask_np=np.array([]), real_dist=1, plot=Fa
     except KeyError: kz = 0
 
     with open("parameters_results.txt", "a") as f:
-        f.write("\n")
         f.write(f"Image {old_id} \n")
-        # f.write("Bin means:", bin_means)
-        f.write(f"mean: {mean_act} \n")
-        f.write(f"std: {np.nanstd(points)} \n")    
-        f.write(f"ES: {ES}, ka: {ka}, k_rms: {k_rms}, Sk: {SK}, k_z: {kz} \n")
+        f.write(f"mean: {mean_act}, std: {np.nanstd(points)} \n")
+        f.write(f"ES: {ES}, Sk: {SK} \n")
+        f.write(f"ka: {ka}, ka_abs: {ka_abs}, k_rms: {k_rms}, k_z: {kz} \n")
         f.write("\n")
 
     if plot:

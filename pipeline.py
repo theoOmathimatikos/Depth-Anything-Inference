@@ -72,7 +72,7 @@ if __name__ == "__main__":
     depth_img_names = custom_infer(args.pretrained_resource, args.model, 
                  args.dataset, **overwrite_kwargs)
     
-    real_dists = [1, 0.3, 0.3]
+    real_dists = [0.25, 0.25, 0.25, 1, 1]
 
     for i, img_name in enumerate(image_new_ids):
 

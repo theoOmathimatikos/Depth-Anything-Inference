@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 from Depth_Anything.metric_depth.evaluate import custom_infer
 from Depth_Anything.metric_depth.zoedepth.utils.arg_utils import parse_unknown
-from image_segmentation import bkgrd_removal_pipeline
+from Background_Removal_Model.image_segmentation import bkgrd_removal_pipeline
 from estimate_parameters import depth_derivatives
 
 

@@ -1,12 +1,13 @@
-import argparse, os
+import argparse, os, sys
 import numpy as np
 import torch
 import matplotlib.pyplot as plt
 
 from Depth_Anything.metric_depth.evaluate import custom_infer
+from Depth_Anything.metric_depth.infer import main as mn
 from Depth_Anything.metric_depth.zoedepth.utils.arg_utils import parse_unknown
+from Depth_Model.UDepth.inference import run_code
 
-# Should do the same with Depth_Anything_2
 
 def visualize_dir_depth(img_names):
 
@@ -40,11 +41,10 @@ if __name__ == "__main__":
         default="local::./Depth_Anything/metric_depth/checkpoints/depth_anything_metric_depth_outdoor.pt")
     parser.add_argument("-d", "--dataset", type=str, required=False,
         default='custom_outdoor')
-    
+        
     args, unknown_args = parser.parse_known_args()
     overwrite_kwargs = parse_unknown(unknown_args)
+    
+    mn(args.model, args.pretrained_resource)
 
-    img_names = custom_infer(args.pretrained_resource, args.model, 
-                 args.dataset, **overwrite_kwargs)
-
-    # visualize_dir_depth(img_names)
+    # run_code(use_rmi=True)

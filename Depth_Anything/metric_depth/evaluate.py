@@ -28,6 +28,7 @@ from pprint import pprint
 import torch
 from tqdm import tqdm
 from PIL import Image
+import matplotlib.pyplot as plt
 import torchvision.transforms as transforms
 
 from .zoedepth.utils.easydict import EasyDict as edict
@@ -141,16 +142,20 @@ def custom_infer(pretrained_resource, model_name, dataset, **kwargs):
         rt, pth = sample['route'], sample['path'][0]
         name = rt[0]+"/Data/Depth_Estim/"+pth
 
-        pred = infer(model, image, dataset=sample['dataset'][0])
-
         try:
 
             pred = infer(model, image, dataset=sample['dataset'][0])
             torch.save(pred, name.rsplit(".", 1)[0]+".pt")
             collect_names.append(pth)
              
-            # p = colorize(pred.squeeze().cpu().numpy(), 0, 10)            
-            # Image.fromarray(p).save(name.rsplit(".", 1)[0]+".png")
+            img_pth = name.rsplit(".", 1)[0]
+            p = colorize(pred.squeeze().cpu().numpy(), 0, 10)
+            Image.fromarray(p).save(img_pth+".png")
+
+            # fig, ax = plt.subplots()
+            # cax = ax.imshow(p, cmap="inferno")
+            # fig.colorbar(cax)
+            # plt.savefig(img_pth+"_bar.png", bbox_inches='tight')
 
         except RuntimeError:
 

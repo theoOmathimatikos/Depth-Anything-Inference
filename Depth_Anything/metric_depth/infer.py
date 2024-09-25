@@ -48,6 +48,8 @@ def process_images(model, dataset, fl=715.0873, max_depth = 150.0):
             resized_pred = Image.fromarray(pred).resize((image_shape[1], image_shape[0]), Image.NEAREST)
             depth_map = np.array(resized_pred)
 
+            torch.save(torch.tensor(depth_map), join(output_dir, str(idx+1)+"_any.pt"))
+
             # Clip and round values
             norm_depth_map = np.clip(depth_map, 0, max_depth) 
             norm_depth_map = norm_depth_map.astype(np.uint8)

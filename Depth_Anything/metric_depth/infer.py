@@ -16,7 +16,7 @@ from .zoedepth.utils.config import get_config
 # FX = 256 * 0.6
 
 
-def process_images(model, dataset, fl=715.0873, max_depth = 100.0):
+def process_images(model, dataset, fl=715.0873, max_depth = 150.0):
         
     input_dir = join(os.getcwd(), "Data/Run")
     output_dir = join(os.getcwd(), "Depth_Model/Results")
@@ -48,9 +48,8 @@ def process_images(model, dataset, fl=715.0873, max_depth = 100.0):
             resized_pred = Image.fromarray(pred).resize((image_shape[1], image_shape[0]), Image.NEAREST)
             depth_map = np.array(resized_pred)
 
-            # Visualize depth map
+            # Clip and round values
             norm_depth_map = np.clip(depth_map, 0, max_depth) 
-            norm_depth_map = (norm_depth_map / max_depth) * 255
             norm_depth_map = norm_depth_map.astype(np.uint8)
 
             # Plot the depth map using a colormap for better visualization

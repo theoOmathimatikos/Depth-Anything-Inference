@@ -47,4 +47,4 @@ if __name__ == "__main__":
     
     mn(args.model, args.pretrained_resource)
 
-    # run_code(use_rmi=True)
+    run_code(use_rmi=True)

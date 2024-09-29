@@ -34,17 +34,17 @@ def vis_one_img(file_name, res_path=None):
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-m", "--model", type=str,
-        default="zoedepth", help="Name of the model to evaluate")
-    parser.add_argument("-p", "--pretrained_resource", type=str,
-        default="local::./Depth_Anything/metric_depth/checkpoints/depth_anything_metric_depth_outdoor.pt")
-    parser.add_argument("-d", "--dataset", type=str, required=False,
-        default='custom_outdoor')
+    # parser = argparse.ArgumentParser()
+    # parser.add_argument("-m", "--model", type=str,
+    #     default="zoedepth", help="Name of the model to evaluate")
+    # parser.add_argument("-p", "--pretrained_resource", type=str,
+    #     default="local::./Depth_Anything/metric_depth/checkpoints/depth_anything_metric_depth_outdoor.pt")
+    # parser.add_argument("-d", "--dataset", type=str, required=False,
+    #     default='custom_outdoor')
         
-    args, unknown_args = parser.parse_known_args()
-    overwrite_kwargs = parse_unknown(unknown_args)
+    # args, unknown_args = parser.parse_known_args()
+    # overwrite_kwargs = parse_unknown(unknown_args)
     
-    mn(args.model, args.pretrained_resource)
+    # mn(args.model, args.pretrained_resource)
 
-    # run_code(use_rmi=False)
+    run_code(use_rmi=False)

@@ -37,6 +37,7 @@ from PIL import Image
 import numpy as np
 
 class Trainer(BaseTrainer):
+    
     def __init__(self, config, model, train_loader, test_loader=None, device=None):
         super().__init__(config, model, train_loader,
                          test_loader=test_loader, device=device)
@@ -44,6 +45,7 @@ class Trainer(BaseTrainer):
         self.silog_loss = SILogLoss()
         self.grad_loss = GradL1Loss()
         self.scaler = amp.GradScaler(enabled=self.config.use_amp)
+
 
     def train_on_batch(self, batch, train_step):
         """
@@ -103,15 +105,20 @@ class Trainer(BaseTrainer):
 
         return losses
     
+
     @torch.no_grad()
     def eval_infer(self, x):
+
         with amp.autocast(enabled=self.config.use_amp):
             m = self.model.module if self.config.multigpu else self.model
             pred_depths = m(x)['metric_depth']
+
         return pred_depths
+
 
     @torch.no_grad()
     def crop_aware_infer(self, x):
+
         # if we are not avoiding the black border, we can just use the normal inference
         if not self.config.get("avoid_boundary", False):
             return self.eval_infer(x)
@@ -144,8 +151,8 @@ class Trainer(BaseTrainer):
         return pred_depths
 
 
-
     def validate_on_batch(self, batch, val_step):
+        
         images = batch['image'].to(self.device)
         depths_gt = batch['depth'].to(self.device)
         dataset = batch['dataset'][0]

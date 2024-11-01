@@ -8,6 +8,7 @@ This is just a simple implementation of the inference for the project Depth-Anyt
 3. Add a new folder `checkpoints` with the following two models that you 'll need to download:
   - https://huggingface.co/spaces/LiheYoung/Depth-Anything/tree/main/checkpoints_metric_depth (get outdoor model)
   - https://huggingface.co/spaces/LiheYoung/Depth-Anything/blob/main/checkpoints/depth_anything_vitl14.pth
+  - - https://huggingface.co/spaces/LiheYoung/Depth-Anything/blob/main/checkpoints/depth_anything_vitb14.pth
   The checkpoints folder should be inside the metric_depth folder.
 
 4. Run 

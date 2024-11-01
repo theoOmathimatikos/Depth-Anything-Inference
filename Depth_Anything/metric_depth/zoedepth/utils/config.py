@@ -33,7 +33,8 @@ import platform
 ROOT = pathlib.Path(__file__).parent.parent.resolve()
 
 # HOME_DIR = os.path.expanduser("./data")
-HOME_DIR = os.getcwd() + "/zoedepth/data"
+# HOME_DIR = os.getcwd() + "/zoedepth/data"
+HOME_DIR = os.getcwd()
 
 COMMON_CONFIG = {
     "save_dir": os.path.expanduser("./depth_anything_finetune"),
@@ -161,16 +162,53 @@ DATASETS_CONFIG = {
         "min_depth": 1e-3,
         "max_depth": 80
     },
-    "custom_outdoor": {
+    "custom": {
         "dataset": "custom_outdoor",
-        "custom_root": os.path.join(HOME_DIR, "CUSTOM/images"),
-        "eigen_crop": False,
-        "garg_crop": True,
-        "do_kb_crop": False,
-        "min_depth_eval": 2,
-        "max_depth_eval": 80,
         "min_depth": 1e-3,
-        "max_depth": 80
+        "max_depth": 80,
+        "custom_root": os.path.join(HOME_DIR, "custom_dataset"),
+        "data_path": os.path.join(HOME_DIR, "custom_dataset/Images"),
+        "gt_path": os.path.join(HOME_DIR, "custom_dataset/depth"),
+        "filenames_file": "./train_test_inputs/custom_train_files.txt",
+        "input_height": 480,
+        "input_width": 640,
+        "data_path_eval": os.path.join(HOME_DIR, "custom_dataset/Images"),
+        "gt_path_eval": os.path.join(HOME_DIR, "custom_dataset/depth"),
+        "filenames_file_eval": "./train_test_inputs/custom_test_files.txt",
+
+        "min_depth_eval": 1e-3,
+        "max_depth_eval": 80,
+
+        "do_random_rotate": True,
+        "degree": 1.0,
+        "do_kb_crop": True,
+        "garg_crop": True,
+        "eigen_crop": False,
+        "use_right": False
+    },
+        "usod": {
+        "dataset": "usod10k",
+        "min_depth": 1e-3,
+        "max_depth": 80,
+        "custom_root": "/kaggle/working",
+        "data_path": "/kaggle/working/train/RGB",
+        "gt_path": "/kaggle/working/train/depth",
+        "filenames_file": "/kaggle/input/depth_anything/pytorch/default/1/metric_depth/train_test_inputs/usod_train_files.txt",
+        "input_height": 480,
+        "input_width": 640,
+        "data_path_eval": "/kaggle/working/validation/RGB",
+        "gt_path_eval": "/kaggle/working/validation/depth",
+        "filenames_file_eval": "/kaggle/input/depth_anything/pytorch/default/1/metric_depth/train_test_inputs/usod_test_files.txt",
+
+        "min_depth_eval": 1e-3,
+        "max_depth_eval": 80,
+
+        "do_random_rotate": True,
+        "degree": 1.0,
+        "do_kb_crop": False,
+        "garg_crop": False,
+        "eigen_crop": False,
+        "use_right": False
     },
     "diode_indoor": {
         "dataset": "diode_indoor",
@@ -386,7 +424,7 @@ def get_config(model_name, mode='train', dataset=None, **overwrite_kwargs):
     check_choices("Model", model_name, ["zoedepth", "zoedepth_nk"])
     check_choices("Mode", mode, ["train", "infer", "eval"])
     if mode == "train":
-        check_choices("Dataset", dataset, ["nyu", "kitti", "mix", None])
+        check_choices("Dataset", dataset, ["nyu", "kitti", "mix", "custom", 'usod10k', None])
 
     config = flatten({**COMMON_CONFIG, **COMMON_TRAINING_CONFIG})
     config = update_model_config(config, mode, model_name)

@@ -22,7 +22,7 @@
 
 # File author: Shariq Farooq Bhat
 
-import os
+import os, glob
 import uuid
 import warnings
 from datetime import datetime as dt
@@ -38,6 +38,7 @@ import wandb
 from tqdm import tqdm
 
 from zoedepth.utils.config import flatten
+from zoedepth.models.model_io import load_wts
 from zoedepth.utils.misc import RunningAverageDict, colorize, colors
 
 
@@ -46,33 +47,37 @@ def is_rank_zero(args):
 
 
 class BaseTrainer:
+
+
     def __init__(self, config, model, train_loader, test_loader=None, device=None):
         """ Base Trainer class for training a model."""
         
         self.config = config
         self.metric_criterion = "abs_rel"
+
         if device is None:
             device = torch.device(
                 'cuda') if torch.cuda.is_available() else torch.device('cpu')
         self.device = device
+
         self.model = model
         self.train_loader = train_loader
         self.test_loader = test_loader
+
         self.optimizer = self.init_optimizer()
         self.scheduler = self.init_scheduler()
 
+
     def resize_to_target(self, prediction, target):
+
         if prediction.shape[2:] != target.shape[-2:]:
             prediction = nn.functional.interpolate(
                 prediction, size=target.shape[-2:], mode="bilinear", align_corners=True
             )
         return prediction
+    
 
     def load_ckpt(self, checkpoint_dir="./checkpoints", ckpt_type="best"):
-        import glob
-        import os
-
-        from zoedepth.models.model_io import load_wts
 
         if hasattr(self.config, "checkpoint"):
             checkpoint = self.config.checkpoint
@@ -85,6 +90,7 @@ class BaseTrainer:
             checkpoint = matches[0]
         else:
             return
+        
         model = load_wts(self.model, checkpoint)
         # TODO : Resuming training is not properly supported in this repo. Implement loading / saving of optimizer and scheduler to support it.
         print("Loaded weights from {0}".format(checkpoint))
@@ -92,7 +98,9 @@ class BaseTrainer:
             "Resuming training is not properly supported in this repo. Implement loading / saving of optimizer and scheduler to support it.")
         self.model = model
 
+
     def init_optimizer(self):
+
         m = self.model.module if self.config.multigpu else self.model
 
         if self.config.same_lr:
@@ -100,6 +108,7 @@ class BaseTrainer:
             if hasattr(m, 'core'):
                 m.core.unfreeze()
             params = self.model.parameters()
+        
         else:
             print("Using diff LR")
             if not hasattr(m, 'get_lr_params'):
@@ -109,6 +118,7 @@ class BaseTrainer:
             params = m.get_lr_params(self.config.lr)
 
         return optim.AdamW(params, lr=self.config.lr, weight_decay=self.config.wd)
+
 
     def init_scheduler(self):
         lrs = [l['lr'] for l in self.optimizer.param_groups]
@@ -140,26 +150,32 @@ class BaseTrainer:
             return True
 
     def train(self):
+
         print(f"Training {self.config.name}")
+
         if self.config.uid is None:
             self.config.uid = str(uuid.uuid4()).split('-')[-1]
+
         run_id = f"{dt.now().strftime('%d-%h_%H-%M')}-{self.config.uid}"
+
         self.config.run_id = run_id
         self.config.experiment_id = f"{self.config.name}{self.config.version_name}_{run_id}"
+    
         self.should_write = ((not self.config.distributed)
                              or self.config.rank == 0)
         self.should_log = self.should_write  # and logging
+    
         if self.should_log:
             tags = self.config.tags.split(
                 ',') if self.config.tags != '' else None
-            wandb.init(project=self.config.project, name=self.config.experiment_id, config=flatten(self.config), dir=self.config.root,
-                       tags=tags, notes=self.config.notes, settings=wandb.Settings(start_method="fork"))
+            wandb.init(mode="disabled")
+            # wandb.init(project=self.config.project, name=self.config.experiment_id, config=flatten(self.config), dir=self.config.root,
+            #            tags=tags, notes=self.config.notes, settings=wandb.Settings(start_method="fork"))
 
         self.model.train()
         self.step = 0
         best_loss = np.inf
         validate_every = int(self.config.validate_every * self.iters_per_epoch)
-
 
         if self.config.prefetch:
 
@@ -168,30 +184,41 @@ class BaseTrainer:
                 pass
 
         losses = {}
+        
         def stringify_losses(L): return "; ".join(map(
             lambda kv: f"{colors.fg.purple}{kv[0]}{colors.reset}: {round(kv[1].item(),3):.4e}", L.items()))
+        
         for epoch in range(self.config.epochs):
+        
             if self.should_early_stop():
                 break
             
             self.epoch = epoch
-            ################################# Train loop ##########################################################
+        
+            ################################# Train loop #######################################
+        
             if self.should_log:
                 wandb.log({"Epoch": epoch}, step=self.step)
+
             pbar = tqdm(enumerate(self.train_loader), desc=f"Epoch: {epoch + 1}/{self.config.epochs}. Loop: Train",
                         total=self.iters_per_epoch) if is_rank_zero(self.config) else enumerate(self.train_loader)
+            
             for i, batch in pbar:
+            
                 if self.should_early_stop():
                     print("Early stopping")
                     break
+            
                 # print(f"Batch {self.step+1} on rank {self.config.rank}")
                 losses = self.train_on_batch(batch, i)
                 # print(f"trained batch {self.step+1} on rank {self.config.rank}")
 
                 self.raise_if_nan(losses)
+            
                 if is_rank_zero(self.config) and self.config.print_losses:
                     pbar.set_description(
                         f"Epoch: {epoch + 1}/{self.config.epochs}. Loop: Train. Losses: {stringify_losses(losses)}")
+            
                 self.scheduler.step()
 
                 if self.should_log and self.step % 50 == 0:
@@ -203,8 +230,10 @@ class BaseTrainer:
                 ########################################################################################################
 
                 if self.test_loader:
+            
                     if (self.step % validate_every) == 0:
                         self.model.eval()
+            
                         if self.should_write:
                             self.save_checkpoint(
                                 f"{self.config.experiment_id}_latest.pt")
@@ -257,10 +286,13 @@ class BaseTrainer:
         self.model.train()
 
     def validate(self):
+
         with torch.no_grad():
+        
             losses_avg = RunningAverageDict()
             metrics_avg = RunningAverageDict()
             for i, batch in tqdm(enumerate(self.test_loader), desc=f"Epoch: {self.epoch + 1}/{self.config.epochs}. Loop: Validation", total=len(self.test_loader), disable=not is_rank_zero(self.config)):
+        
                 metrics, losses = self.validate_on_batch(batch, val_step=i)
 
                 if losses:

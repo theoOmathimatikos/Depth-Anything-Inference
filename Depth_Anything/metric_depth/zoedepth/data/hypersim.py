@@ -106,6 +106,7 @@ class HyperSim(Dataset):
         self.transform = ToTensor()
 
     def __getitem__(self, idx):
+        
         image_path = self.image_files[idx]
         depth_path = self.depth_files[idx]
 

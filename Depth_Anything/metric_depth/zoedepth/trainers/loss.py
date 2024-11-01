@@ -41,13 +41,16 @@ def extract_key(prediction, key):
 # Main loss function used for ZoeDepth. Copy/paste from AdaBins repo (https://github.com/shariqfarooq123/AdaBins/blob/0952d91e9e762be310bb4cd055cbfe2448c0ce20/loss.py#L7)
 class SILogLoss(nn.Module):
     """SILog loss (pixel-wise)"""
+
     def __init__(self, beta=0.15):
         super(SILogLoss, self).__init__()
         self.name = 'SILog'
         self.beta = beta
 
     def forward(self, input, target, mask=None, interpolate=True, return_interpolated=False):
+
         input = extract_key(input, KEY_OUTPUT)
+        
         if input.shape[-1] != target.shape[-1] and interpolate:
             input = nn.functional.interpolate(
                 input, target.shape[-2:], mode='bilinear', align_corners=True)
@@ -66,6 +69,7 @@ class SILogLoss(nn.Module):
             target = target[mask]
 
         with amp.autocast(enabled=False):  # amp causes NaNs in this loss function
+            
             alpha = 1e-7
             g = torch.log(input + alpha) - torch.log(target + alpha)
 
@@ -78,6 +82,7 @@ class SILogLoss(nn.Module):
             loss = 10 * torch.sqrt(Dg)
 
         if torch.isnan(loss):
+
             print("Nan SILog loss")
             print("input:", input.shape)
             print("target:", target.shape)
@@ -109,6 +114,7 @@ def grad_mask(mask):
 
 class GradL1Loss(nn.Module):
     """Gradient loss"""
+    
     def __init__(self):
         super(GradL1Loss, self).__init__()
         self.name = 'GradL1'
@@ -278,7 +284,10 @@ def compute_scale_and_shift(prediction, target, mask):
     x_1[valid] = (-a_01[valid] * b_0[valid] + a_00[valid] * b_1[valid]) / det[valid]
 
     return x_0, x_1
+
+
 class ScaleAndShiftInvariantLoss(nn.Module):
+
     def __init__(self):
         super().__init__()
         self.name = "SSILoss"

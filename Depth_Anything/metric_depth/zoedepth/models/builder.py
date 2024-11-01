@@ -22,6 +22,7 @@
 
 # File author: Shariq Farooq Bhat
 
+import os
 from importlib import import_module
 from .depth_model import DepthModel
 
@@ -36,7 +37,7 @@ def build_model(config, package=None) -> DepthModel:
     Returns:
         torch.nn.Module: Model corresponding to name and version as specified in config
     """
-    module_name = f"Depth_Anything.metric_depth.zoedepth.models.{config.model}"
+    module_name = f"zoedepth.models.{config.model}"  # Depth_Anything.metric_depth.
     # print(module_name)
     try:
         module = import_module(module_name)

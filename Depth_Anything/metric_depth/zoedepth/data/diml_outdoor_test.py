@@ -38,6 +38,7 @@ class ToTensor(object):
         self.normalize = lambda x : x
 
     def __call__(self, sample):
+        
         image, depth = sample['image'], sample['depth']
         image = self.to_tensor(image)
         image = self.normalize(image)
@@ -51,7 +52,7 @@ class ToTensor(object):
             img = torch.from_numpy(pic.transpose((2, 0, 1)))
             return img
 
-        #         # handle PIL Image
+        # handle PIL Image
         if pic.mode == 'I':
             img = torch.from_numpy(np.array(pic, np.int32, copy=False))
         elif pic.mode == 'I;16':

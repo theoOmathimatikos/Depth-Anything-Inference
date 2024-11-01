@@ -34,15 +34,20 @@ from .base_trainer import BaseTrainer
 
 
 class Trainer(BaseTrainer):
+
     def __init__(self, config, model, train_loader, test_loader=None, device=None):
+    
         super().__init__(config, model, train_loader,
                          test_loader=test_loader, device=device)
+    
         self.device = device
         self.silog_loss = SILogLoss()
+    
         self.grad_loss = GradL1Loss()
         self.domain_classifier_loss = nn.CrossEntropyLoss()
 
         self.scaler = amp.GradScaler(enabled=self.config.use_amp)
+
 
     def train_on_batch(self, batch, train_step):
         """
@@ -112,10 +117,13 @@ class Trainer(BaseTrainer):
 
         return losses
 
+
     def validate_on_batch(self, batch, val_step):
+
         images = batch['image'].to(self.device)
         depths_gt = batch['depth'].to(self.device)
         dataset = batch['dataset'][0]
+
         if 'has_valid_depth' in batch:
             if not batch['has_valid_depth']:
                 return None, None

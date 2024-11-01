@@ -22,8 +22,7 @@
 
 # File author: Shariq Farooq Bhat
 
-import os
-
+import os, glob
 import numpy as np
 import torch
 from PIL import Image
@@ -32,6 +31,7 @@ from torchvision import transforms
 
 
 class ToTensor(object):
+
     def __init__(self):
         # self.normalize = transforms.Normalize(
         #     mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
@@ -39,6 +39,7 @@ class ToTensor(object):
         self.resize = transforms.Resize((480, 640))
 
     def __call__(self, sample):
+
         image, depth = sample['image'], sample['depth']
         image = self.to_tensor(image)
         image = self.normalize(image)
@@ -54,7 +55,7 @@ class ToTensor(object):
             img = torch.from_numpy(pic.transpose((2, 0, 1)))
             return img
 
-        #         # handle PIL Image
+        # handle PIL Image
         if pic.mode == 'I':
             img = torch.from_numpy(np.array(pic, np.int32, copy=False))
         elif pic.mode == 'I;16':
@@ -79,8 +80,8 @@ class ToTensor(object):
 
 
 class DIML_Indoor(Dataset):
+
     def __init__(self, data_dir_root):
-        import glob
 
         # image paths are of the form <data_dir_root>/{HR, LR}/<scene>/{color, depth_filled}/*.png
         self.image_files = glob.glob(os.path.join(
@@ -90,6 +91,7 @@ class DIML_Indoor(Dataset):
         self.transform = ToTensor()
 
     def __getitem__(self, idx):
+
         image_path = self.image_files[idx]
         depth_path = self.depth_files[idx]
 
@@ -97,10 +99,6 @@ class DIML_Indoor(Dataset):
         depth = np.asarray(Image.open(depth_path),
                            dtype='uint16') / 1000.0  # mm to meters
 
-        # print(np.shape(image))
-        # print(np.shape(depth))
-
-        # depth[depth > 8] = -1
         depth = depth[..., None]
 
         sample = dict(image=image, depth=depth)
@@ -118,6 +116,7 @@ class DIML_Indoor(Dataset):
 
 
 def get_diml_indoor_loader(data_dir_root, batch_size=1, **kwargs):
+    
     dataset = DIML_Indoor(data_dir_root)
     return DataLoader(dataset, batch_size, **kwargs)
 

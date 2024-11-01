@@ -37,9 +37,9 @@ class CropParams:
 
 
 def get_border_params(rgb_image, tolerance=0.1, cut_off=20, value=0, level_diff_threshold=5, channel_axis=-1, min_border=5) -> CropParams:
+    
     gray_image = np.mean(rgb_image, axis=channel_axis)
     h, w = gray_image.shape
-
 
     def num_value_pixels(arr):
         return np.sum(np.abs(arr - value) < level_diff_threshold)

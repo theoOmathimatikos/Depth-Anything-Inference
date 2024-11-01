@@ -74,30 +74,32 @@ def evaluate(model, test_loader, config, round_vals=True, round_precision=3):
     
     model.eval()
     metrics = RunningAverageDict()
+
     for i, sample in tqdm(enumerate(test_loader), total=len(test_loader)):
+        
         if 'has_valid_depth' in sample:
             if not sample['has_valid_depth']:
                 continue
+        
         image, depth = sample['image'], sample['depth']
         image, depth = image.cuda(), depth.cuda()
         depth = depth.squeeze().unsqueeze(0).unsqueeze(0)
         focal = sample.get('focal', torch.Tensor(
             [715.0873]).cuda())  # This magic number (focal) is only used for evaluating BTS model
-        pred = infer(model, image, dataset=sample['dataset'][0], focal=focal)
+        pred = infer(model, image, dataset=config.dataset, focal=focal)
 
         # Save image, depth, pred for visualization
         if "save_images" in config and config.save_images:
 
             os.makedirs(config.save_images, exist_ok=True)
-            # def save_image(img, path):
             d = colorize(depth.squeeze().cpu().numpy(), 0, 10)
             p = colorize(pred.squeeze().cpu().numpy(), 0, 10)
+
             im = transforms.ToPILImage()(image.squeeze().cpu())
             im.save(os.path.join(config.save_images, f"{i}_img.png"))
             Image.fromarray(d).save(os.path.join(config.save_images, f"{i}_depth.png"))
             Image.fromarray(p).save(os.path.join(config.save_images, f"{i}_pred.png"))
 
-        # print(depth.shape, pred.shape)
         metrics.update(compute_metrics(depth, pred, config=config))
 
     if round_vals:
@@ -123,7 +125,7 @@ def main(config):
     metrics['#params'] = f"{round(count_parameters(model, include_all=True)/1e6, 2)}M"
     return metrics
 
-
+"""
 @torch.no_grad()
 def custom_infer(pretrained_resource, model_name, dataset, **kwargs):
 
@@ -162,7 +164,7 @@ def custom_infer(pretrained_resource, model_name, dataset, **kwargs):
             print("An error occured")
 
     return collect_names
-
+"""
 
 def eval_model(model_name, pretrained_resource, dataset='nyu', **kwargs):
 
@@ -170,7 +172,7 @@ def eval_model(model_name, pretrained_resource, dataset='nyu', **kwargs):
     overwrite = {**kwargs, "pretrained_resource": pretrained_resource} if pretrained_resource else kwargs
     config = get_config(model_name, "eval", dataset, **overwrite)
     # config = change_dataset(config, dataset)  # change the dataset
-    pprint(config)
+    # pprint(config)
     print(f"Evaluating {model_name} on {dataset}...")
     metrics = main(config)
     return metrics
@@ -180,34 +182,34 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-m", "--model", type=str,
-                        required=True, help="Name of the model to evaluate")
+                        required=False, default= "zoedepth", help="Name of the model to evaluate")
     parser.add_argument("-p", "--pretrained_resource", type=str,
-                        required=False, default="", help="Pretrained resource to use for fetching weights. If not set, default resource from model config is used,  Refer models.model_io.load_state_from_resource for more details.")
+                        required=False, default="local::./checkpoints/depth_anything_metric_depth_outdoor.pt",
+                        help="Pretrained resource to use for fetching weights. If not set, default resource from model config is used,  Refer models.model_io.load_state_from_resource for more details.")
     parser.add_argument("-d", "--dataset", type=str, required=False,
                         default='nyu', help="Dataset to evaluate on")
 
     args, unknown_args = parser.parse_known_args()
     overwrite_kwargs = parse_unknown(unknown_args)
 
-    # print(args)
-    # print(overwrite_kwargs)
-
-    if "ALL_INDOOR" in args.dataset:
-        datasets = ALL_INDOOR
-    elif "ALL_OUTDOOR" in args.dataset:
-        datasets = ALL_OUTDOOR
-    elif "ALL" in args.dataset:
-        datasets = ALL_EVAL_DATASETS
-    elif "," in args.dataset:
-        datasets = args.dataset.split(",")
-    else:
-        datasets = [args.dataset]
-    
+    # if "ALL_INDOOR" in args.dataset:
+    #     datasets = ALL_INDOOR
+    # elif "ALL_OUTDOOR" in args.dataset:
+    #     datasets = ALL_OUTDOOR
+    # elif "ALL" in args.dataset:
+    #     datasets = ALL_EVAL_DATASETS
+    # elif "," in args.dataset:
+    #     datasets = args.dataset.split(",")
+    # else:
+    #     datasets = [args.dataset]
+    #
     # for dataset in datasets:
     #     eval_model(args.model, pretrained_resource=args.pretrained_resource,
     #                 dataset=dataset, **overwrite_kwargs)
 
-    custom_infer(args.pretrained_resource, args.model, args.dataset, **overwrite_kwargs)
+    # custom_infer(args.pretrained_resource, args.model, args.dataset, **overwrite_kwargs)
+
+    dataset = "custom_outdoor"
+    _ = eval_model(args.model, pretrained_resource=args.pretrained_resource,
+                    dataset=dataset, **overwrite_kwargs)
     
-    # Run as
-    # python evaluate.py -m zoedepth --pretrained_resource="local::./checkpoints/depth_anything_metric_depth_outdoor.pt" -d custom_outdoor

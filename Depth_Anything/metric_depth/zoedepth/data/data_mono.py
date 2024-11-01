@@ -41,16 +41,17 @@ from torchvision import transforms
 from ..utils.easydict import EasyDict as edict
 from ..utils.config import change_dataset
 
-from .ddad import get_ddad_loader
-from .diml_indoor_test import get_diml_indoor_loader
-from .diml_outdoor_test import get_diml_outdoor_loader
-from .diode import get_diode_loader
-from .hypersim import get_hypersim_loader
-from .ibims import get_ibims_loader
-from .sun_rgbd_loader import get_sunrgbd_loader
-from .vkitti import get_vkitti_loader
-from .vkitti2 import get_vkitti2_loader
-from .custom_test import get_custom_loader
+# from .ddad import get_ddad_loader
+# from .diml_indoor_test import get_diml_indoor_loader
+# from .diml_outdoor_test import get_diml_outdoor_loader
+# from .diode import get_diode_loader
+# from .hypersim import get_hypersim_loader
+# from .ibims import get_ibims_loader
+# from .sun_rgbd_loader import get_sunrgbd_loader
+# from .vkitti import get_vkitti_loader
+# from .vkitti2 import get_vkitti2_loader
+# from .custom_test import get_custom_loader
+from .usod import get_usod_loader
 
 from .preprocess import CropParams, get_white_border, get_black_border
 
@@ -83,54 +84,61 @@ class DepthDataLoader(object):
 
         self.config = config
 
-        if config.dataset == 'ibims':
-            self.data = get_ibims_loader(config, batch_size=1, num_workers=1)
-            return
+        # if config.dataset == 'ibims':
+        #     self.data = get_ibims_loader(config, batch_size=1, num_workers=1)
+        #     return
 
-        if config.dataset == 'sunrgbd':
-            self.data = get_sunrgbd_loader(
-                data_dir_root=config.sunrgbd_root, batch_size=1, num_workers=1)
-            return
+        # if config.dataset == 'sunrgbd':
+        #     self.data = get_sunrgbd_loader(
+        #         data_dir_root=config.sunrgbd_root, batch_size=1, num_workers=1)
+        #     return
 
-        if config.dataset == 'diml_indoor':
-            self.data = get_diml_indoor_loader(
-                data_dir_root=config.diml_indoor_root, batch_size=1, num_workers=1)
-            return
+        # if config.dataset == 'diml_indoor':
+        #     self.data = get_diml_indoor_loader(
+        #         data_dir_root=config.diml_indoor_root, batch_size=1, num_workers=1)
+        #     return
 
-        if config.dataset == 'diml_outdoor':
-            self.data = get_diml_outdoor_loader(
-                data_dir_root=config.diml_outdoor_root, batch_size=1, num_workers=1)
-            return
+        # if config.dataset == 'diml_outdoor':
+        #     self.data = get_diml_outdoor_loader(
+        #         data_dir_root=config.diml_outdoor_root, batch_size=1, num_workers=1)
+        #     return
 
-        if "diode" in config.dataset:
-            self.data = get_diode_loader(
-                config[config.dataset+"_root"], batch_size=1, num_workers=1)
-            return
+        # if "diode" in config.dataset:
+        #     self.data = get_diode_loader(
+        #         config[config.dataset+"_root"], batch_size=1, num_workers=1)
+        #     return
 
-        if config.dataset == 'hypersim_test':
-            self.data = get_hypersim_loader(
-                config.hypersim_test_root, batch_size=1, num_workers=1)
-            return
+        # if config.dataset == 'hypersim_test':
+        #     self.data = get_hypersim_loader(
+        #         config.hypersim_test_root, batch_size=1, num_workers=1)
+        #     return
 
-        if config.dataset == 'vkitti':
-            self.data = get_vkitti_loader(
-                config.vkitti_root, batch_size=1, num_workers=1)
-            return
+        # if config.dataset == 'vkitti':
+        #     self.data = get_vkitti_loader(
+        #         config.vkitti_root, batch_size=1, num_workers=1)
+        #     return
 
-        if config.dataset == 'vkitti2':
-            self.data = get_vkitti2_loader(
-                config.vkitti2_root, batch_size=1, num_workers=1)
-            return
+        # if config.dataset == 'vkitti2':
+        #     self.data = get_vkitti2_loader(
+        #         config.vkitti2_root, batch_size=1, num_workers=1)
+        #     return
 
-        if config.dataset == 'ddad':
-            self.data = get_ddad_loader(config.ddad_root, resize_shape=(
-                352, 1216), batch_size=1, num_workers=1)
-            return
+        # if config.dataset == 'ddad':
+        #     self.data = get_ddad_loader(config.ddad_root, resize_shape=(
+        #         352, 1216), batch_size=1, num_workers=1)
+        #     return
         
-        if config.dataset == 'custom_outdoor':
-            self.data = get_custom_loader(os.getcwd()+"/Data/Run/", batch_size=1, 
-                                          num_workers=1)
-            return
+        # if config.dataset == 'custom_eval':
+        #     self.data = get_custom_loader(config.custom_root, batch_size=1, 
+        #                                   num_workers=1)
+        #     return
+        
+        # TODO
+
+        # if config.dataset == 'usod10k':
+        # if mode == 'eval':
+        #     self.data = get_usod_loader(f"/kaggle/working/{mode}")
+        #     return
 
         img_size = self.config.get("img_size", None)
         img_size = img_size if self.config.get(
@@ -272,14 +280,28 @@ class ImReader:
     # @cache
     def open(self, fpath):
         return Image.open(fpath)
+    
+
+def ensure_rgb(image):
+    """
+    Convert image to RGB if it has an alpha channel (RGBA).
+    """
+    if image.mode == 'RGBA':
+        # Convert RGBA to RGB by discarding the alpha channel
+        image = image.convert('RGB')
+    return image
 
 
 class DataLoadPreprocess(Dataset):
+
     def __init__(self, config, mode, transform=None, is_for_online_eval=False, **kwargs):
+
         self.config = config
+        
         if mode == 'online_eval':
             with open(config.filenames_file_eval, 'r') as f:
                 self.filenames = f.readlines()
+        
         else:
             with open(config.filenames_file, 'r') as f:
                 self.filenames = f.readlines()
@@ -307,14 +329,24 @@ class DataLoadPreprocess(Dataset):
                     self.config.data_path, remove_leading_slash(sample_path.split()[3]))
                 depth_path = os.path.join(
                     self.config.gt_path, remove_leading_slash(sample_path.split()[4]))
-            else:
+                
+            elif self.config.dataset == "nyu":
                 image_path = os.path.join(
                     self.config.data_path, remove_leading_slash(sample_path.split()[0]))
                 depth_path = os.path.join(
                     self.config.gt_path, remove_leading_slash(sample_path.split()[1]))
+            
+            else:
+                image_path = os.path.join(
+                    self.config.data_path, sample_path.split()[0])
+                depth_path = os.path.join(
+                    self.config.gt_path, sample_path.split()[1])
 
             image = self.reader.open(image_path)
             depth_gt = self.reader.open(depth_path)
+
+            image = ensure_rgb(image)
+
             w, h = image.size
 
             if self.config.do_kb_crop:
@@ -359,7 +391,7 @@ class DataLoadPreprocess(Dataset):
 
             if self.config.dataset == 'nyu':
                 depth_gt = depth_gt / 1000.0
-            else:
+            elif self.config.dataset == 'kitti':
                 depth_gt = depth_gt / 256.0
 
             if self.config.aug and (self.config.random_crop):
@@ -404,11 +436,14 @@ class DataLoadPreprocess(Dataset):
                     depth_gt = np.expand_dims(depth_gt, axis=2)
                     if self.config.dataset == 'nyu':
                         depth_gt = depth_gt / 1000.0
-                    else:
+                    elif self.config.dataset == 'vkitti':
                         depth_gt = depth_gt / 256.0
+                    else:
+                        depth_gt = depth_gt / 1.
 
                     mask = np.logical_and(
                         depth_gt >= self.config.min_depth, depth_gt <= self.config.max_depth).squeeze()[None, ...]
+                    
                 else:
                     mask = False
 

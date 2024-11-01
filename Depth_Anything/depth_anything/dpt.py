@@ -1,10 +1,10 @@
-import os
-from os.path import dirname as dr
+import argparse
 import torch
 import torch.nn as nn
-
-from .blocks import FeatureFusionBlock, _make_scratch
 import torch.nn.functional as F
+from huggingface_hub import PyTorchModelHubMixin, hf_hub_download
+
+from depth_anything.blocks import FeatureFusionBlock, _make_scratch
 
 
 def _make_fusion_block(features, use_bn, size = None):
@@ -20,14 +20,11 @@ def _make_fusion_block(features, use_bn, size = None):
 
 
 class DPTHead(nn.Module):
-    def __init__(self, in_channels, features=256, use_bn=False, out_channels=[256, 512, 1024, 1024], use_clstoken=False):
+    def __init__(self, nclass, in_channels, features=256, use_bn=False, out_channels=[256, 512, 1024, 1024], use_clstoken=False):
         super(DPTHead, self).__init__()
         
+        self.nclass = nclass
         self.use_clstoken = use_clstoken
-        
-        # out_channels = [in_channels // 8, in_channels // 4, in_channels // 2, in_channels]
-        # out_channels = [in_channels // 4, in_channels // 2, in_channels, in_channels]
-        # out_channels = [in_channels, in_channels, in_channels, in_channels]
         
         self.projects = nn.ModuleList([
             nn.Conv2d(
@@ -86,16 +83,23 @@ class DPTHead(nn.Module):
         head_features_1 = features
         head_features_2 = 32
         
-        self.scratch.output_conv1 = nn.Conv2d(head_features_1, head_features_1 // 2, kernel_size=3, stride=1, padding=1)
-        
-        self.scratch.output_conv2 = nn.Sequential(
-            nn.Conv2d(head_features_1 // 2, head_features_2, kernel_size=3, stride=1, padding=1),
-            nn.ReLU(True),
-            nn.Conv2d(head_features_2, 1, kernel_size=1, stride=1, padding=0),
-            nn.ReLU(True),
-            nn.Identity(),
-        )
-    
+        if nclass > 1:
+            self.scratch.output_conv = nn.Sequential(
+                nn.Conv2d(head_features_1, head_features_1, kernel_size=3, stride=1, padding=1),
+                nn.ReLU(True),
+                nn.Conv2d(head_features_1, nclass, kernel_size=1, stride=1, padding=0),
+            )
+        else:
+            self.scratch.output_conv1 = nn.Conv2d(head_features_1, head_features_1 // 2, kernel_size=3, stride=1, padding=1)
+            
+            self.scratch.output_conv2 = nn.Sequential(
+                nn.Conv2d(head_features_1 // 2, head_features_2, kernel_size=3, stride=1, padding=1),
+                nn.ReLU(True),
+                nn.Conv2d(head_features_2, 1, kernel_size=1, stride=1, padding=0),
+                nn.ReLU(True),
+                nn.Identity(),
+            )
+            
     def forward(self, out_features, patch_h, patch_w):
         out = []
         for i, x in enumerate(out_features):
@@ -128,27 +132,29 @@ class DPTHead(nn.Module):
         out = self.scratch.output_conv1(path_1)
         out = F.interpolate(out, (int(patch_h * 14), int(patch_w * 14)), mode="bilinear", align_corners=True)
         out = self.scratch.output_conv2(out)
-            
-        return out
-
-
-class DPT_DINOv2(nn.Module):
-    def __init__(self, encoder='vitl', features=256, use_bn=False, out_channels=[256, 512, 1024, 1024], use_clstoken=False):
-
-        super(DPT_DINOv2, self).__init__()
-
-        torch.manual_seed(1)
         
-        load_dir = dr(dr(os.getcwd()))
-        self.pretrained = torch.hub.load(load_dir+'/Depth_Anything/torchhub/facebookresearch_dinov2_main', 'dinov2_{:}14'.format(encoder), source='local', pretrained=False)
+        return out
+        
+        
+class DPT_DINOv2(nn.Module):
+    def __init__(self, encoder='vitl', features=256, out_channels=[256, 512, 1024, 1024], use_bn=False, use_clstoken=False, localhub=True):
+        super(DPT_DINOv2, self).__init__()
+        
+        assert encoder in ['vits', 'vitb', 'vitl']
+        
+        # in case the Internet connection is not stable, please load the DINOv2 locally
+        if localhub:
+            self.pretrained = torch.hub.load('torchhub/facebookresearch_dinov2_main', 'dinov2_{:}14'.format(encoder), source='local', pretrained=False)
+        else:
+            self.pretrained = torch.hub.load('facebookresearch/dinov2', 'dinov2_{:}14'.format(encoder))
         
         dim = self.pretrained.blocks[0].attn.qkv.in_features
         
-        self.depth_head = DPTHead(dim, features, use_bn, out_channels=out_channels, use_clstoken=use_clstoken)
-
+        self.depth_head = DPTHead(1, dim, features, use_bn, out_channels=out_channels, use_clstoken=use_clstoken)
+        
     def forward(self, x):
         h, w = x.shape[-2:]
-
+        
         features = self.pretrained.get_intermediate_layers(x, 4, return_class_token=True)
         
         patch_h, patch_w = h // 14, w // 14
@@ -158,3 +164,24 @@ class DPT_DINOv2(nn.Module):
         depth = F.relu(depth)
 
         return depth.squeeze(1)
+
+
+class DepthAnything(DPT_DINOv2, PyTorchModelHubMixin):
+    def __init__(self, config):
+        super().__init__(**config)
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--encoder",
+        default="vits",
+        type=str,
+        choices=["vits", "vitb", "vitl"],
+    )
+    args = parser.parse_args()
+    
+    model = DepthAnything.from_pretrained("LiheYoung/depth_anything_{:}14".format(args.encoder))
+    
+    print(model)
+    

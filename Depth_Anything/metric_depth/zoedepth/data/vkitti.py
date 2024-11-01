@@ -139,6 +139,7 @@ def get_vkitti_loader(data_dir_root, batch_size=1, **kwargs):
 
 
 if __name__ == "__main__":
+    
     loader = get_vkitti_loader(
         data_dir_root="/home/bhatsf/shortcuts/datasets/vkitti_test")
     print("Total files", len(loader.dataset))

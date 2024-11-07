@@ -137,6 +137,7 @@ class DPTHead(nn.Module):
         
         
 class DPT_DINOv2(nn.Module):
+    
     def __init__(self, encoder='vitl', features=256, out_channels=[256, 512, 1024, 1024], use_bn=False, use_clstoken=False, localhub=True):
         super(DPT_DINOv2, self).__init__()
         

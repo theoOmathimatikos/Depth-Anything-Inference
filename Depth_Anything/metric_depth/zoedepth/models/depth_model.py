@@ -39,9 +39,7 @@ class DepthModel(nn.Module):
     
     def to(self, device) -> nn.Module:
         self.device = device
-        # print("Before model loading:", torch.cuda.memory_allocated() / 1024**2, "MB")
         mdl = super().to(device)
-        # print("After model loading:", torch.cuda.memory_allocated() / 1024**2, "MB")
         return mdl
     
     def forward(self, x, *args, **kwargs):

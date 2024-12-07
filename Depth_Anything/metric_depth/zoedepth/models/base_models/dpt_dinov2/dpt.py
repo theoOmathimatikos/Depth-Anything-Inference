@@ -139,7 +139,7 @@ class DPT_DINOv2(nn.Module):
 
         torch.manual_seed(1)
         
-        load_dir = dr(dr(os.getcwd()))
+        load_dir = os.getcwd()
         self.pretrained = torch.hub.load(load_dir+'/Depth_Anything/torchhub/facebookresearch_dinov2_main', 'dinov2_{:}14'.format(encoder), source='local', pretrained=False)
         
         dim = self.pretrained.blocks[0].attn.qkv.in_features

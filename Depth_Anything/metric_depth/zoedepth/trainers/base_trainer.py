@@ -48,7 +48,6 @@ def is_rank_zero(args):
 
 class BaseTrainer:
 
-
     def __init__(self, config, model, train_loader, test_loader=None, device=None):
         """ Base Trainer class for training a model."""
         

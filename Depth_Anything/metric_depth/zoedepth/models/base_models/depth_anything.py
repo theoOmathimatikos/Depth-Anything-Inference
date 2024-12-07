@@ -340,8 +340,9 @@ class DepthAnythingCore(nn.Module):
         
         depth_anything = DPT_DINOv2(out_channels=[256, 512, 1024, 1024], use_clstoken=False)
         
-        load_dict = dr(dr(os.getcwd()))
+        load_dict = os.getcwd()
         state_dict = torch.load(os.path.join(load_dict, 'Depth_Anything/checkpoints/depth_anything_vitl14.pth'), map_location='cpu')
+
         depth_anything.load_state_dict(state_dict)
         
         kwargs.update({'keep_aspect_ratio': force_keep_ar})

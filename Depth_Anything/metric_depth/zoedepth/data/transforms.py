@@ -42,9 +42,10 @@ class RandomFliplr(object):
         self.__probability = probability
 
     def __call__(self, sample):
+        
         prob = random.random()
-
         if prob < self.__probability:
+            
             for k, v in sample.items():
                 if len(v.shape) >= 2:
                     sample[k] = np.fliplr(v).copy()

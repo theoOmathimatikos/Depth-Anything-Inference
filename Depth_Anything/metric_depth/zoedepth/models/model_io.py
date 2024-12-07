@@ -52,6 +52,9 @@ def load_state_dict(model, state_dict):
 
 
 def load_wts(model, checkpoint_path):
+    import os
+    from os.path import dirname as dr
+    checkpoint_path = os.getcwd() + checkpoint_path
     ckpt = torch.load(checkpoint_path, map_location='cpu')
     return load_state_dict(model, ckpt)
 
